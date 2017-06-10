@@ -14,11 +14,11 @@ def inc(d, k):
 class Dedup:
 
     def __init__(
-        self, minhash, filename, max_age=timedelta(
-            hours=1), cleanup_interval=timedelta(
-            minutes=1)):
-        #        super(Dedup, self).__init__()
-        self._filename = filename
+        self,
+        minhash=MinHash(),
+        max_age=timedelta(hours=1), 
+        cleanup_interval=timedelta(minutes=1)
+    ):
         self._max_age = max_age
         self._cleanup_interval = cleanup_interval
 
@@ -26,7 +26,6 @@ class Dedup:
         self._last_cleanup = datetime.utcnow() - cleanup_interval
         self._minhash = minhash
 
-        self.load()
         self.cleanup()
         self._stats = {}
 
@@ -41,10 +40,10 @@ class Dedup:
         with open(self._filename, 'w') as f:
             json.dump(self._minhash_dict, f)
 
-    def is_duplicate(self, text, dt):
+    def is_duplicate(self, text, dt=datetime.utcnow()):
         self.cleanup_if_needed()
 
-        footprint = tuple(self._minhash.hashes(text))
+        footprint = tuple(self._minhash.hasher.hashes(text))
         if footprint in self._minhash_dict:
             inc(self._stats, 'duplicates')
             return True
